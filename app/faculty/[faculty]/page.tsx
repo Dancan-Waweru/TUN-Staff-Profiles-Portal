@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { FACULTIES, DEPARTMENTS } from '@/lib/constants'
+import Footer from '@/components/Footer'
 
 interface FacultyPageProps {
   params: { faculty: string }
@@ -134,6 +135,8 @@ export default async function FacultyPage({ params }: FacultyPageProps) {
           </div>
         )}
       </main>
+      
+      <Footer />
     </div>
   )
 }
