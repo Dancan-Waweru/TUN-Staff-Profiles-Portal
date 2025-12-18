@@ -1,13 +1,35 @@
 {
   "name": "tharaka-university-staff-profiles",
   "version": "1.0.0",
-  "description": "Tharaka University Staff Profile Management System",
-  "main": "server.js",
+  "description": "A comprehensive staff profile management system for Tharaka University with Google OAuth, admin dashboard, and SEO optimization",
+  "author": "Tharaka University",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/tharaka-university-staff-profiles.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/tharaka-university-staff-profiles/issues"
+  },
+  "homepage": "https://github.com/yourusername/tharaka-university-staff-profiles#readme",
+  "keywords": [
+    "university",
+    "staff-profiles",
+    "nextjs",
+    "typescript",
+    "prisma",
+    "tailwindcss",
+    "google-oauth",
+    "seo"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "next": "^14.0.0",

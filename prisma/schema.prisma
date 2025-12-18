@@ -49,9 +49,9 @@ model User {
 }
 
 model Profile {
-  id                String     @id @default(cuid())
-  userId            String     @unique
-  staffId           String?    @unique
+  id                String        @id @default(cuid())
+  userId            String        @unique
+  staffId           String?       @unique
   firstName         String
   lastName          String
   middleName        String?
@@ -65,17 +65,37 @@ model Profile {
   biography         String?
   qualifications    String?
   researchInterests String?
-  publications      String?
   profileImage      String?
   linkedinUrl       String?
   googleScholarUrl  String?
   orcidUrl          String?
   researchgateUrl   String?
   websiteUrl        String?
-  isPublic          Boolean    @default(true)
-  slug              String     @unique
-  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  isPublic          Boolean       @default(true)
+  slug              String        @unique
+  publications      Publication[]
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model Publication {
+  id        String   @id @default(cuid())
+  title     String
+  url       String?
+  year      Int?
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 

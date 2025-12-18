@@ -111,6 +111,16 @@ export default function AdminPage() {
               <p className="text-gray-600">Manage staff profiles</p>
             </div>
             <div className="flex items-center space-x-4">
+              <Link href="/admin/stats" className="btn-secondary">
+                Statistics
+              </Link>
+              <a
+                href="/api/admin/export"
+                className="btn-secondary"
+                download
+              >
+                Export CSV
+              </a>
               <Link href="/admin/bulk-upload" className="btn-primary">
                 Bulk Upload
               </Link>
