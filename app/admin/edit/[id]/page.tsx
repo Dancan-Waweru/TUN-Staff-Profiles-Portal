@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { FACULTIES, DEPARTMENTS, TITLES, POSITIONS } from '@/lib/constants'
+import { professionalLinksSchema, getUrlValidationError, getUrlExample } from '@/lib/validation'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 
@@ -24,13 +25,8 @@ const profileSchema = z.object({
   qualifications: z.string().optional(),
   researchInterests: z.string().optional(),
   publications: z.string().optional(),
-  linkedinUrl: z.string().url().optional().or(z.literal('')),
-  googleScholarUrl: z.string().url().optional().or(z.literal('')),
-  orcidUrl: z.string().url().optional().or(z.literal('')),
-  researchgateUrl: z.string().url().optional().or(z.literal('')),
-  websiteUrl: z.string().url().optional().or(z.literal('')),
   isPublic: z.boolean(),
-})
+}).merge(professionalLinksSchema)
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
@@ -44,15 +40,53 @@ export default function AdminEditProfilePage({ params }: AdminEditProfilePagePro
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [profileImage, setProfileImage] = useState<string>('')
+  const [urlErrors, setUrlErrors] = useState<Record<string, string>>({})
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
   })
+
+  // Watch URL fields for real-time validation
+  const watchedUrls = watch(['linkedinUrl', 'googleScholarUrl', 'orcidUrl', 'researchgateUrl', 'websiteUrl'])
+
+  // Validate URLs in real-time
+  useEffect(() => {
+    const [linkedinUrl, googleScholarUrl, orcidUrl, researchgateUrl, websiteUrl] = watchedUrls
+    const newErrors: Record<string, string> = {}
+
+    if (linkedinUrl) {
+      const error = getUrlValidationError('linkedin', linkedinUrl)
+      if (error) newErrors.linkedinUrl = error
+    }
+
+    if (googleScholarUrl) {
+      const error = getUrlValidationError('googleScholar', googleScholarUrl)
+      if (error) newErrors.googleScholarUrl = error
+    }
+
+    if (orcidUrl) {
+      const error = getUrlValidationError('orcid', orcidUrl)
+      if (error) newErrors.orcidUrl = error
+    }
+
+    if (researchgateUrl) {
+      const error = getUrlValidationError('researchgate', researchgateUrl)
+      if (error) newErrors.researchgateUrl = error
+    }
+
+    if (websiteUrl) {
+      const error = getUrlValidationError('website', websiteUrl)
+      if (error) newErrors.websiteUrl = error
+    }
+
+    setUrlErrors(newErrors)
+  }, watchedUrls)
 
   useEffect(() => {
     if (!session) {

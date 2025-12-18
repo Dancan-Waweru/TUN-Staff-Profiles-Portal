@@ -1,17 +1,34 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { FACULTIES, DEPARTMENTS } from '@/lib/constants'
-import { NextSeo } from 'next-seo'
+import TharakaLogo from '@/components/TharakaLogo'
+
+interface Publication {
+  id: string
+  title: string
+  authors: string
+  url?: string | null
+  year?: number | null
+}
 
 interface StaffProfilePageProps {
   params: { slug: string }
 }
 
 async function getStaffProfile(slug: string) {
-  return await prisma.profile.findUnique({
+  const profile = await prisma.profile.findUnique({
     where: { slug, isPublic: true },
     include: { user: true }
   })
+  
+  if (!profile) return null
+  
+  const publications = await (prisma as any).publication.findMany({
+    where: { profileId: profile.id },
+    orderBy: { createdAt: 'desc' }
+  })
+  
+  return { ...profile, publications }
 }
 
 export async function generateMetadata({ params }: StaffProfilePageProps) {
@@ -53,6 +70,15 @@ export default async function StaffProfilePage({ params }: StaffProfilePageProps
     email: profile.email,
     telephone: profile.phone,
     description: profile.biography,
+    ...(profile.publications && profile.publications.length > 0 && {
+      hasCredential: profile.publications.map((pub: Publication) => ({
+        '@type': 'EducationalOccupationalCredential',
+        name: pub.title,
+        description: `Publication by ${pub.authors}`,
+        ...(pub.year && { dateCreated: pub.year.toString() }),
+        ...(pub.url && { url: pub.url })
+      }))
+    })
   }
 
   return (
@@ -64,17 +90,26 @@ export default async function StaffProfilePage({ params }: StaffProfilePageProps
       
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <header className="bg-white shadow-sm">
+        <header className="bg-white shadow-lg border-b-4 border-primary">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Tharaka University
-                </h1>
-              </div>
-              <a href="/" className="text-primary-600 hover:text-primary-500">
-                ← Back to Directory
-              </a>
+              <TharakaLogo size="md" />
+              <nav className="flex items-center space-x-6">
+                <a href="/" className="text-gray-600 hover:text-primary transition-colors">
+                  Directory
+                </a>
+                <a 
+                  href="https://www.tharaka.ac.ke" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary transition-colors"
+                >
+                  University Website ↗
+                </a>
+                <a href="/" className="btn-secondary">
+                  ← Back to Directory
+                </a>
+              </nav>
             </div>
           </div>
         </header>
@@ -83,7 +118,7 @@ export default async function StaffProfilePage({ params }: StaffProfilePageProps
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="bg-white shadow rounded-lg overflow-hidden">
             {/* Profile Header */}
-            <div className="bg-primary-600 px-6 py-8">
+            <div className="gradient-primary px-6 py-8">
               <div className="flex items-center space-x-6">
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
                   {profile.profileImage ? (
@@ -260,13 +295,37 @@ export default async function StaffProfilePage({ params }: StaffProfilePageProps
                     </div>
                   )}
 
-                  {profile.publications && (
+                  {profile.publications && profile.publications.length > 0 && (
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                        Publications
+                      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                        Publications ({profile.publications.length})
                       </h2>
-                      <div className="text-gray-700 whitespace-pre-line">
-                        {profile.publications}
+                      <div className="space-y-4">
+                        {profile.publications.map((publication: Publication) => (
+                          <div key={publication.id} className="border-l-4 border-primary-500 pl-4 py-2">
+                            <h3 className="font-medium text-gray-900 mb-1">
+                              {publication.title}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-1">
+                              {publication.authors}
+                            </p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              {publication.year && (
+                                <span>Year: {publication.year}</span>
+                              )}
+                              {publication.url && (
+                                <a
+                                  href={publication.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary-600 hover:text-primary-700 font-medium"
+                                >
+                                  View Publication →
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

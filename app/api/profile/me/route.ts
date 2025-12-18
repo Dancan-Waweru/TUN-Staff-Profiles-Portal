@@ -6,20 +6,24 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
+    console.log('Profile/me session:', session?.user)
     
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
+      console.log('No session or email in profile/me')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const profile = await prisma.profile.findUnique({
-      where: { userId: session.user.id },
+    // Find the user by email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { profile: true }
     })
 
-    if (!profile) {
+    if (!user || !user.profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    return NextResponse.json(profile)
+    return NextResponse.json(user.profile)
   } catch (error) {
     console.error('Profile fetch error:', error)
     return NextResponse.json(

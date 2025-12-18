@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { FACULTIES, DEPARTMENTS } from '@/lib/constants'
+import TharakaLogo from '@/components/TharakaLogo'
 
 interface StaffProfile {
   id: string
@@ -78,16 +79,30 @@ export default function HomePage() {
     <>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <header className="bg-white shadow-sm">
+        <header className="bg-white shadow-lg border-b-4 border-primary">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Tharaka University
-                </h1>
-                <p className="text-gray-600">Staff Directory</p>
-              </div>
-              <div className="flex space-x-4">
+              <TharakaLogo size="lg" />
+              <div className="flex items-center space-x-6">
+                <nav className="hidden md:flex space-x-6">
+                  <Link href="/faculties" className="text-gray-600 hover:text-primary transition-colors">
+                    Faculties
+                  </Link>
+                  <Link href="/departments" className="text-gray-600 hover:text-primary transition-colors">
+                    Departments
+                  </Link>
+                  <Link href="/library" className="text-gray-600 hover:text-primary transition-colors">
+                    Library
+                  </Link>
+                  <a 
+                    href="https://www.tharaka.ac.ke" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-primary transition-colors"
+                  >
+                    University Website ↗
+                  </a>
+                </nav>
                 <Link href="/auth/signin" className="btn-primary">
                   Staff Login
                 </Link>
@@ -97,22 +112,34 @@ export default function HomePage() {
         </header>
 
         {/* Hero Section */}
-        <section className="bg-primary-600 text-white py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl font-bold mb-4">
+        <section className="header-gradient text-white py-20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-black opacity-10"></div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-5xl font-bold mb-6">
               Meet Our Distinguished Faculty
             </h2>
-            <p className="text-xl text-primary-100 max-w-3xl mx-auto">
+            <p className="text-xl opacity-90 max-w-3xl mx-auto leading-relaxed">
               Discover the expertise and achievements of our academic and administrative staff
-              across all faculties and departments.
+              across all faculties and departments at Tharaka University.
             </p>
+            <div className="mt-8">
+              <Link href="#directory" className="btn-accent text-lg px-8 py-3">
+                Explore Directory
+              </Link>
+            </div>
           </div>
+          {/* Decorative elements */}
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-10 rounded-full"></div>
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-white opacity-5 rounded-full"></div>
         </section>
 
         {/* Search and Filters */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Find Staff Members</h3>
+        <section id="directory" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="card p-8">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-primary mb-2">Find Staff Members</h3>
+              <p className="text-gray-600">Search our comprehensive directory of faculty and staff</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <input
@@ -174,7 +201,8 @@ export default function HomePage() {
               <p className="mt-4 text-gray-600">Loading staff profiles...</p>
             </div>
           ) : (
-          {Object.entries(groupedByFaculty).map(([faculty, facultyProfiles]) => (
+            <>
+              {Object.entries(groupedByFaculty).map(([faculty, facultyProfiles]) => (
             <section key={faculty} className="mb-12">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">
@@ -224,13 +252,63 @@ export default function HomePage() {
               </div>
             </section>
           ))}
+            </>
           )}
         </main>
 
         {/* Footer */}
-        <footer className="bg-gray-800 text-white py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p>&copy; 2024 Tharaka University. All rights reserved.</p>
+        <footer className="bg-primary text-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="md:col-span-2">
+                <div className="flex items-center space-x-3 mb-4">
+                  <TharakaLogo size="md" showText={false} />
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold text-white">
+                      Tharaka University
+                    </span>
+                    <span className="text-accent text-xs">
+                      Education for Freedom
+                    </span>
+                  </div>
+                </div>
+                <p className="text-gray-300 mb-4">
+                  Tharaka University is committed to providing quality education and fostering 
+                  academic excellence across all disciplines.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-4 text-white">Quick Links</h4>
+                <ul className="space-y-2 text-sm">
+                  <li><Link href="/faculties" className="text-gray-300 hover:text-white transition-colors">Faculties</Link></li>
+                  <li><Link href="/departments" className="text-gray-300 hover:text-white transition-colors">Departments</Link></li>
+                  <li><Link href="/library" className="text-gray-300 hover:text-white transition-colors">Library</Link></li>
+                  <li>
+                    <a 
+                      href="https://www.tharaka.ac.ke" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-300 hover:text-white transition-colors"
+                    >
+                      University Website ↗
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-4 text-white">Contact Info</h4>
+                <div className="text-sm text-gray-300 space-y-2">
+                  <p className="text-white font-medium">Tharaka University</p>
+                  <p>P.O. Box 193-60215, Marimanti</p>
+                  <p>Email: info@tharaka.ac.ke</p>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-gray-600 mt-8 pt-8 text-center">
+              <p className="text-sm text-gray-400">
+                &copy; {new Date().getFullYear()} Tharaka University. All rights reserved.
+              </p>
+            </div>
           </div>
         </footer>
       </div>

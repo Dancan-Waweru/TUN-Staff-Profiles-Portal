@@ -11,6 +11,12 @@ interface AdminStats {
   publicProfiles: number
   privateProfiles: number
   recentRegistrations: number
+  completeProfiles: number
+  incompleteProfiles: number
+  profilesWithSocialLinks: number
+  totalPublications: number
+  publicationsByFaculty: Record<string, number>
+  publicationsByDepartment: Record<string, number>
   facultyStats: Array<{ faculty: string; _count: { faculty: number } }>
   departmentStats: Array<{ department: string; _count: { department: number } }>
   positionStats: Array<{ position: string; _count: { position: number } }>
@@ -103,6 +109,29 @@ export default function AdminStatsPage() {
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900">Complete Profiles</h3>
+            <p className="text-3xl font-bold text-blue-600">{stats.completeProfiles}</p>
+            <p className="text-sm text-gray-500">
+              {((stats.completeProfiles / stats.totalStaff) * 100).toFixed(1)}% of total
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900">Total Publications</h3>
+            <p className="text-3xl font-bold text-purple-600">{stats.totalPublications}</p>
+            <p className="text-sm text-gray-500">Across all faculties</p>
+          </div>
+        </div>
+
+        {/* Secondary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900">Incomplete Profiles</h3>
+            <p className="text-3xl font-bold text-orange-600">{stats.incompleteProfiles}</p>
+            <p className="text-sm text-gray-500">
+              {((stats.incompleteProfiles / stats.totalStaff) * 100).toFixed(1)}% of total
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900">Private Profiles</h3>
             <p className="text-3xl font-bold text-red-600">{stats.privateProfiles}</p>
             <p className="text-sm text-gray-500">
@@ -110,9 +139,77 @@ export default function AdminStatsPage() {
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
+            <p className="text-3xl font-bold text-indigo-600">{stats.profilesWithSocialLinks}</p>
+            <p className="text-sm text-gray-500">
+              {((stats.profilesWithSocialLinks / stats.totalStaff) * 100).toFixed(1)}% have links
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900">Recent Registrations</h3>
-            <p className="text-3xl font-bold text-blue-600">{stats.recentRegistrations}</p>
+            <p className="text-3xl font-bold text-teal-600">{stats.recentRegistrations}</p>
             <p className="text-sm text-gray-500">Last 30 days</p>
+          </div>
+        </div>
+
+        {/* Publications Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Publications by Faculty */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Publications by Faculty</h3>
+            <div className="space-y-3">
+              {Object.entries(stats.publicationsByFaculty).map(([faculty, count]) => (
+                <div key={faculty} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 flex-1">
+                    {FACULTIES[faculty as keyof typeof FACULTIES]}
+                  </span>
+                  <span className="font-medium text-gray-900 ml-2">
+                    {count}
+                  </span>
+                  <div className="w-16 bg-gray-200 rounded-full h-2 ml-2">
+                    <div
+                      className="bg-purple-600 h-2 rounded-full"
+                      style={{
+                        width: `${stats.totalPublications > 0 ? (count / stats.totalPublications) * 100 : 0}%`
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+              {Object.keys(stats.publicationsByFaculty).length === 0 && (
+                <p className="text-gray-500 text-sm">No publications recorded yet</p>
+              )}
+            </div>
+          </div>
+
+          {/* Publications by Department */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Publications by Department</h3>
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {Object.entries(stats.publicationsByDepartment)
+                .sort(([,a], [,b]) => b - a)
+                .map(([department, count]) => (
+                <div key={department} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 flex-1">
+                    {DEPARTMENTS[department as keyof typeof DEPARTMENTS]}
+                  </span>
+                  <span className="font-medium text-gray-900 ml-2">
+                    {count}
+                  </span>
+                  <div className="w-16 bg-gray-200 rounded-full h-2 ml-2">
+                    <div
+                      className="bg-indigo-600 h-2 rounded-full"
+                      style={{
+                        width: `${stats.totalPublications > 0 ? (count / stats.totalPublications) * 100 : 0}%`
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+              {Object.keys(stats.publicationsByDepartment).length === 0 && (
+                <p className="text-gray-500 text-sm">No publications recorded yet</p>
+              )}
+            </div>
           </div>
         </div>
 

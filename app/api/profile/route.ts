@@ -7,8 +7,17 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Find the user by email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     const data = await request.json()
@@ -19,8 +28,8 @@ export async function POST(request: NextRequest) {
     const profile = await prisma.profile.create({
       data: {
         ...data,
-        userId: session.user.id,
-        email: session.user.email!,
+        userId: user.id,
+        email: session.user.email,
         slug: slug,
       },
     })
@@ -38,23 +47,37 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
+    console.log('Profile update session:', session?.user)
     
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
+      console.log('No session or email for profile update')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Find the user by email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      console.log('User not found for email:', session.user.email)
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
     const data = await request.json()
+    console.log('Profile update data:', Object.keys(data))
     
     const profile = await prisma.profile.update({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       data: data,
     })
 
+    console.log('Profile updated successfully')
     return NextResponse.json(profile)
   } catch (error) {
     console.error('Profile update error:', error)
     return NextResponse.json(
-      { error: 'Failed to update profile' },
+      { error: 'Failed to update profile', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

@@ -4,6 +4,8 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import ProfileCompletenessIndicator from '@/components/ProfileCompletenessIndicator'
+import TharakaLogo from '@/components/TharakaLogo'
 
 interface Profile {
   id: string
@@ -84,16 +86,32 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-lg border-b-4 border-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Staff Dashboard
-              </h1>
-              <p className="text-gray-600">Manage your profile</p>
+            <div className="flex items-center space-x-4">
+              <TharakaLogo size="md" showText={false} />
+              <div>
+                <h1 className="text-2xl font-bold text-primary">
+                  Staff Dashboard
+                </h1>
+                <p className="text-gray-600">Manage your profile</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
+              <nav className="hidden md:flex space-x-4">
+                <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
+                  Public Directory
+                </Link>
+                <a 
+                  href="https://www.tharaka.ac.ke" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary transition-colors"
+                >
+                  University Website ↗
+                </a>
+              </nav>
               {session?.user.role === 'ADMIN' && (
                 <Link href="/admin" className="btn-secondary">
                   Admin Panel
@@ -101,7 +119,7 @@ export default function DashboardPage() {
               )}
               <button
                 onClick={() => signOut()}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-primary transition-colors"
               >
                 Sign Out
               </button>
@@ -113,7 +131,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {profile && (
-          <div className="bg-white shadow rounded-lg">
+          <div className="card">
             <div className="px-6 py-8">
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -164,6 +182,8 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
+                  <ProfileCompletenessIndicator profile={profile} />
+                  
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-medium text-gray-900 mb-2">Quick Stats</h3>
                     <div className="space-y-2 text-sm">

@@ -20,8 +20,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -41,11 +40,11 @@ model User {
   emailVerified DateTime?
   image         String?
   role          String    @default("STAFF")
-  accounts      Account[]
-  sessions      Session[]
-  profile       Profile?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  profile       Profile?
+  sessions      Session[]
 }
 
 model Profile {
@@ -73,22 +72,13 @@ model Profile {
   websiteUrl        String?
   isPublic          Boolean       @default(true)
   slug              String        @unique
-  publications      Publication[]
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publications      Publication[]
 }
 
-model Publication {
-  id        String   @id @default(cuid())
-  title     String
-  url       String?
-  year      Int?
-  profileId String
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+
 
 model Announcement {
   id        String   @id @default(cuid())
@@ -98,4 +88,14 @@ model Announcement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
+model Publication {
+  id        String   @id @default(cuid())
+  title     String
+  authors   String
+  url       String?
+  year      Int?
+  profileId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}

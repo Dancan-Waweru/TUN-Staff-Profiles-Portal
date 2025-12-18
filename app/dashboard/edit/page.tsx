@@ -7,6 +7,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { FACULTIES, DEPARTMENTS, TITLES, POSITIONS } from '@/lib/constants'
+import { professionalLinksSchema, getUrlValidationError, getUrlExample } from '@/lib/validation'
+import PublicationsManager from '@/components/PublicationsManager'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 
@@ -23,13 +25,7 @@ const profileSchema = z.object({
   biography: z.string().optional(),
   qualifications: z.string().optional(),
   researchInterests: z.string().optional(),
-  publications: z.string().optional(),
-  linkedinUrl: z.string().url().optional().or(z.literal('')),
-  googleScholarUrl: z.string().url().optional().or(z.literal('')),
-  orcidUrl: z.string().url().optional().or(z.literal('')),
-  researchgateUrl: z.string().url().optional().or(z.literal('')),
-  websiteUrl: z.string().url().optional().or(z.literal('')),
-})
+}).merge(professionalLinksSchema)
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
@@ -39,15 +35,53 @@ export default function EditProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [profileImage, setProfileImage] = useState<string>('')
+  const [urlErrors, setUrlErrors] = useState<Record<string, string>>({})
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
   })
+
+  // Watch URL fields for real-time validation
+  const watchedUrls = watch(['linkedinUrl', 'googleScholarUrl', 'orcidUrl', 'researchgateUrl', 'websiteUrl'])
+
+  // Validate URLs in real-time
+  useEffect(() => {
+    const [linkedinUrl, googleScholarUrl, orcidUrl, researchgateUrl, websiteUrl] = watchedUrls
+    const newErrors: Record<string, string> = {}
+
+    if (linkedinUrl) {
+      const error = getUrlValidationError('linkedin', linkedinUrl)
+      if (error) newErrors.linkedinUrl = error
+    }
+
+    if (googleScholarUrl) {
+      const error = getUrlValidationError('googleScholar', googleScholarUrl)
+      if (error) newErrors.googleScholarUrl = error
+    }
+
+    if (orcidUrl) {
+      const error = getUrlValidationError('orcid', orcidUrl)
+      if (error) newErrors.orcidUrl = error
+    }
+
+    if (researchgateUrl) {
+      const error = getUrlValidationError('researchgate', researchgateUrl)
+      if (error) newErrors.researchgateUrl = error
+    }
+
+    if (websiteUrl) {
+      const error = getUrlValidationError('website', websiteUrl)
+      if (error) newErrors.websiteUrl = error
+    }
+
+    setUrlErrors(newErrors)
+  }, watchedUrls)
 
   useEffect(() => {
     if (!session) {
@@ -95,7 +129,7 @@ export default function EditProfilePage() {
 
       if (response.ok) {
         toast.success('Profile updated successfully!')
-        router.push('/dashboard')
+        // Stay on the edit page so users can continue editing
       } else {
         toast.error('Failed to update profile')
       }
@@ -315,11 +349,13 @@ export default function EditProfilePage() {
                     <input
                       type="url"
                       {...register('linkedinUrl')}
-                      placeholder="https://linkedin.com/in/yourprofile"
-                      className="form-input"
+                      placeholder={getUrlExample('linkedin')}
+                      className={`form-input ${urlErrors.linkedinUrl ? 'border-red-500' : ''}`}
                     />
-                    {errors.linkedinUrl && (
-                      <p className="text-red-500 text-sm mt-1">{errors.linkedinUrl.message}</p>
+                    {(errors.linkedinUrl || urlErrors.linkedinUrl) && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.linkedinUrl?.message?.toString() || urlErrors.linkedinUrl}
+                      </p>
                     )}
                   </div>
 
@@ -328,11 +364,13 @@ export default function EditProfilePage() {
                     <input
                       type="url"
                       {...register('googleScholarUrl')}
-                      placeholder="https://scholar.google.com/citations?user=..."
-                      className="form-input"
+                      placeholder={getUrlExample('googleScholar')}
+                      className={`form-input ${urlErrors.googleScholarUrl ? 'border-red-500' : ''}`}
                     />
-                    {errors.googleScholarUrl && (
-                      <p className="text-red-500 text-sm mt-1">{errors.googleScholarUrl.message}</p>
+                    {(errors.googleScholarUrl || urlErrors.googleScholarUrl) && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.googleScholarUrl?.message?.toString() || urlErrors.googleScholarUrl}
+                      </p>
                     )}
                   </div>
 
@@ -341,11 +379,13 @@ export default function EditProfilePage() {
                     <input
                       type="url"
                       {...register('orcidUrl')}
-                      placeholder="https://orcid.org/0000-0000-0000-0000"
-                      className="form-input"
+                      placeholder={getUrlExample('orcid')}
+                      className={`form-input ${urlErrors.orcidUrl ? 'border-red-500' : ''}`}
                     />
-                    {errors.orcidUrl && (
-                      <p className="text-red-500 text-sm mt-1">{errors.orcidUrl.message}</p>
+                    {(errors.orcidUrl || urlErrors.orcidUrl) && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.orcidUrl?.message?.toString() || urlErrors.orcidUrl}
+                      </p>
                     )}
                   </div>
 
@@ -354,11 +394,13 @@ export default function EditProfilePage() {
                     <input
                       type="url"
                       {...register('researchgateUrl')}
-                      placeholder="https://www.researchgate.net/profile/..."
-                      className="form-input"
+                      placeholder={getUrlExample('researchgate')}
+                      className={`form-input ${urlErrors.researchgateUrl ? 'border-red-500' : ''}`}
                     />
-                    {errors.researchgateUrl && (
-                      <p className="text-red-500 text-sm mt-1">{errors.researchgateUrl.message}</p>
+                    {(errors.researchgateUrl || urlErrors.researchgateUrl) && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.researchgateUrl?.message?.toString() || urlErrors.researchgateUrl}
+                      </p>
                     )}
                   </div>
 
@@ -367,11 +409,13 @@ export default function EditProfilePage() {
                     <input
                       type="url"
                       {...register('websiteUrl')}
-                      placeholder="https://yourwebsite.com"
-                      className="form-input"
+                      placeholder={getUrlExample('website')}
+                      className={`form-input ${urlErrors.websiteUrl ? 'border-red-500' : ''}`}
                     />
-                    {errors.websiteUrl && (
-                      <p className="text-red-500 text-sm mt-1">{errors.websiteUrl.message}</p>
+                    {(errors.websiteUrl || urlErrors.websiteUrl) && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.websiteUrl?.message?.toString() || urlErrors.websiteUrl}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -411,15 +455,7 @@ export default function EditProfilePage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="form-label">Publications</label>
-                    <textarea
-                      {...register('publications')}
-                      rows={4}
-                      className="form-input"
-                      placeholder="Key publications and research outputs..."
-                    />
-                  </div>
+
                 </div>
               </div>
 
@@ -429,13 +465,26 @@ export default function EditProfilePage() {
                 </Link>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || Object.keys(urlErrors).length > 0}
                   className="btn-primary disabled:opacity-50"
                 >
                   {isSubmitting ? 'Updating...' : 'Update Profile'}
                 </button>
+                {Object.keys(urlErrors).length > 0 && (
+                  <p className="text-red-500 text-sm">
+                    Please fix URL validation errors before submitting
+                  </p>
+                )}
               </div>
             </form>
+
+            {/* Publications Management - Separate from main form */}
+            <div className="mt-8 bg-white shadow rounded-lg">
+              <div className="px-6 py-8">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Publications</h2>
+                <PublicationsManager />
+              </div>
+            </div>
           </div>
         </div>
       </div>

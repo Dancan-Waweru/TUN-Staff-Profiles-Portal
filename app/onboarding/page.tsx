@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { FACULTIES, DEPARTMENTS, TITLES, POSITIONS } from '@/lib/constants'
+import { professionalLinksSchema, getUrlValidationError, getUrlExample } from '@/lib/validation'
 import toast from 'react-hot-toast'
 
 const profileSchema = z.object({
@@ -22,12 +23,7 @@ const profileSchema = z.object({
   biography: z.string().optional(),
   qualifications: z.string().optional(),
   researchInterests: z.string().optional(),
-  linkedinUrl: z.string().url().optional().or(z.literal('')),
-  googleScholarUrl: z.string().url().optional().or(z.literal('')),
-  orcidUrl: z.string().url().optional().or(z.literal('')),
-  researchgateUrl: z.string().url().optional().or(z.literal('')),
-  websiteUrl: z.string().url().optional().or(z.literal('')),
-})
+}).merge(professionalLinksSchema)
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
@@ -35,14 +31,52 @@ export default function OnboardingPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [urlErrors, setUrlErrors] = useState<Record<string, string>>({})
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
   })
+
+  // Watch URL fields for real-time validation
+  const watchedUrls = watch(['linkedinUrl', 'googleScholarUrl', 'orcidUrl', 'researchgateUrl', 'websiteUrl'])
+
+  // Validate URLs in real-time
+  useEffect(() => {
+    const [linkedinUrl, googleScholarUrl, orcidUrl, researchgateUrl, websiteUrl] = watchedUrls
+    const newErrors: Record<string, string> = {}
+
+    if (linkedinUrl) {
+      const error = getUrlValidationError('linkedin', linkedinUrl)
+      if (error) newErrors.linkedinUrl = error
+    }
+
+    if (googleScholarUrl) {
+      const error = getUrlValidationError('googleScholar', googleScholarUrl)
+      if (error) newErrors.googleScholarUrl = error
+    }
+
+    if (orcidUrl) {
+      const error = getUrlValidationError('orcid', orcidUrl)
+      if (error) newErrors.orcidUrl = error
+    }
+
+    if (researchgateUrl) {
+      const error = getUrlValidationError('researchgate', researchgateUrl)
+      if (error) newErrors.researchgateUrl = error
+    }
+
+    if (websiteUrl) {
+      const error = getUrlValidationError('website', websiteUrl)
+      if (error) newErrors.websiteUrl = error
+    }
+
+    setUrlErrors(newErrors)
+  }, watchedUrls)
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true)
@@ -238,9 +272,12 @@ export default function OnboardingPage() {
                     <input
                       type="url"
                       {...register('linkedinUrl')}
-                      placeholder="https://linkedin.com/in/yourprofile"
-                      className="form-input"
+                      placeholder={getUrlExample('linkedin')}
+                      className={`form-input ${urlErrors.linkedinUrl ? 'border-red-500' : ''}`}
                     />
+                    {urlErrors.linkedinUrl && (
+                      <p className="text-red-500 text-sm mt-1">{urlErrors.linkedinUrl}</p>
+                    )}
                   </div>
 
                   <div>
@@ -248,9 +285,12 @@ export default function OnboardingPage() {
                     <input
                       type="url"
                       {...register('googleScholarUrl')}
-                      placeholder="https://scholar.google.com/citations?user=..."
-                      className="form-input"
+                      placeholder={getUrlExample('googleScholar')}
+                      className={`form-input ${urlErrors.googleScholarUrl ? 'border-red-500' : ''}`}
                     />
+                    {urlErrors.googleScholarUrl && (
+                      <p className="text-red-500 text-sm mt-1">{urlErrors.googleScholarUrl}</p>
+                    )}
                   </div>
 
                   <div>
@@ -258,9 +298,12 @@ export default function OnboardingPage() {
                     <input
                       type="url"
                       {...register('orcidUrl')}
-                      placeholder="https://orcid.org/0000-0000-0000-0000"
-                      className="form-input"
+                      placeholder={getUrlExample('orcid')}
+                      className={`form-input ${urlErrors.orcidUrl ? 'border-red-500' : ''}`}
                     />
+                    {urlErrors.orcidUrl && (
+                      <p className="text-red-500 text-sm mt-1">{urlErrors.orcidUrl}</p>
+                    )}
                   </div>
 
                   <div>
@@ -268,9 +311,12 @@ export default function OnboardingPage() {
                     <input
                       type="url"
                       {...register('researchgateUrl')}
-                      placeholder="https://www.researchgate.net/profile/..."
-                      className="form-input"
+                      placeholder={getUrlExample('researchgate')}
+                      className={`form-input ${urlErrors.researchgateUrl ? 'border-red-500' : ''}`}
                     />
+                    {urlErrors.researchgateUrl && (
+                      <p className="text-red-500 text-sm mt-1">{urlErrors.researchgateUrl}</p>
+                    )}
                   </div>
 
                   <div className="md:col-span-2">
@@ -278,9 +324,12 @@ export default function OnboardingPage() {
                     <input
                       type="url"
                       {...register('websiteUrl')}
-                      placeholder="https://yourwebsite.com"
-                      className="form-input"
+                      placeholder={getUrlExample('website')}
+                      className={`form-input ${urlErrors.websiteUrl ? 'border-red-500' : ''}`}
                     />
+                    {urlErrors.websiteUrl && (
+                      <p className="text-red-500 text-sm mt-1">{urlErrors.websiteUrl}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -288,11 +337,16 @@ export default function OnboardingPage() {
               <div className="flex justify-end space-x-4">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || Object.keys(urlErrors).length > 0}
                   className="btn-primary disabled:opacity-50"
                 >
                   {isSubmitting ? 'Creating Profile...' : 'Create Profile'}
                 </button>
+                {Object.keys(urlErrors).length > 0 && (
+                  <p className="text-red-500 text-sm">
+                    Please fix URL validation errors before submitting
+                  </p>
+                )}
               </div>
             </form>
           </div>

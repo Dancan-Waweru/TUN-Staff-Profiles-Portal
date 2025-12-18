@@ -1,10 +1,8 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from './prisma'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -12,42 +10,68 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session?.user) {
-        session.user.id = user.id
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          include: { profile: true }
-        })
-        session.user.role = dbUser?.role || 'STAFF'
-        session.user.hasProfile = !!dbUser?.profile
+    async session({ session, token }) {
+      if (session?.user && session.user.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            include: { profile: true }
+          })
+          
+          if (dbUser) {
+            session.user.id = dbUser.id
+            session.user.role = dbUser.role as 'ADMIN' | 'STAFF'
+            session.user.hasProfile = !!dbUser.profile
+          } else {
+            session.user.id = token?.sub || ''
+            session.user.role = 'STAFF'
+            session.user.hasProfile = false
+          }
+        } catch (error) {
+          console.error('Session callback error:', error)
+          session.user.id = token?.sub || ''
+          session.user.role = 'STAFF'
+          session.user.hasProfile = false
+        }
       }
       return session
     },
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
+      if (!user.email) return false
+      
       try {
         console.log('SignIn callback:', { user: user.email, provider: account?.provider })
+        
+        if (account?.provider === 'google') {
+          const isAdmin = user.email === process.env.ADMIN_EMAIL
+          
+          await prisma.user.upsert({
+            where: { email: user.email },
+            update: {
+              name: user.name,
+              image: user.image,
+              role: isAdmin ? 'ADMIN' : 'STAFF'
+            },
+            create: {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              role: isAdmin ? 'ADMIN' : 'STAFF'
+            }
+          })
+        }
+        
         return true
       } catch (error) {
         console.error('SignIn error:', error)
         return true
       }
-    }
-  },
-  events: {
-    async signIn({ user, account, profile, isNewUser }) {
-      try {
-        console.log('SignIn event:', { user: user.email, isNewUser })
-        if (account?.provider === 'google' && user.email === process.env.ADMIN_EMAIL) {
-          await prisma.user.update({
-            where: { email: user.email! },
-            data: { role: 'ADMIN' }
-          })
-          console.log('Admin role assigned to:', user.email)
-        }
-      } catch (error) {
-        console.error('SignIn event error:', error)
+    },
+    async jwt({ token, user }) {
+      if (user?.email) {
+        token.role = user.email === process.env.ADMIN_EMAIL ? 'ADMIN' : 'STAFF'
       }
+      return token
     }
   },
   pages: {
@@ -55,7 +79,8 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error'
   },
   session: {
-    strategy: 'database'
+    strategy: 'jwt'
   },
-  debug: process.env.NODE_ENV === 'development'
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: false
 }
