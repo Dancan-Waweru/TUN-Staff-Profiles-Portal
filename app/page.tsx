@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { FACULTIES, DEPARTMENTS } from '@/lib/constants'
 import TharakaLogo from '@/components/TharakaLogo'
 import Footer from '@/components/Footer'
+import { useSession } from 'next-auth/react'    
 
 interface StaffProfile {
   id: string
@@ -19,6 +20,7 @@ interface StaffProfile {
 }
 
 export default function HomePage() {
+  const { data: session } = useSession()
   const [profiles, setProfiles] = useState<StaffProfile[]>([])
   const [filteredProfiles, setFilteredProfiles] = useState<StaffProfile[]>([])
   const [loading, setLoading] = useState(true)
@@ -104,10 +106,20 @@ export default function HomePage() {
                     University Website ↗
                   </a>
                 </nav>
-                <Link href="/auth/signin" className="btn-primary">
-                  Staff Login
-                </Link>
-              </div>
+                        {!session ? (
+              <Link href="/auth/signin" className="btn-primary">
+                Staff Login
+              </Link>
+            ) : !session.user.isApproved ? (
+              <Link href="/auth/pending" className="text-yellow-600 font-medium hover:underline">
+                Pending Approval ⏳
+              </Link>
+            ) : (
+              <Link href="/dashboard" className="btn-primary">
+                Go to Dashboard
+              </Link>
+            )}
+           </div>
             </div>
           </div>
         </header>

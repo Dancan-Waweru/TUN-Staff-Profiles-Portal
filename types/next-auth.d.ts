@@ -10,17 +10,22 @@ declare module 'next-auth' {
       image?: string | null
       role: 'ADMIN' | 'STAFF'
       hasProfile: boolean
+      isApproved: boolean
     }
   }
 
-  interface User {
-    role: 'ADMIN' | 'STAFF'
-    hasProfile: boolean
-  }
+ interface User {
+  role: 'ADMIN' | 'STAFF'
+  hasProfile: boolean
+  isApproved: boolean 
+}
+
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     role: 'ADMIN' | 'STAFF'
+    isApproved: boolean
+    hasProfile: boolean
   }
 }

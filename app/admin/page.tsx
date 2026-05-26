@@ -14,12 +14,14 @@ interface StaffProfile {
   position: string
   department: string
   faculty: string
+  isApproved: boolean
   isPublic: boolean
   createdAt: string
   user: {
     name: string
     email: string
   }
+  profile?:any
 }
 
 export default function AdminPage() {
@@ -43,6 +45,29 @@ export default function AdminPage() {
 
     fetchProfiles()
   }, [session, status, router])
+
+  const toggleApproval = async (userId: string, currentStatus: boolean) => {
+  try {
+    const response = await fetch('/api/admin/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        userId: userId, 
+        approve: !currentStatus 
+      }),
+    })
+
+    if (response.ok) {
+      // This tells the page to go get the fresh data so the button updates
+      fetchProfiles() 
+    } else {
+      console.error('Failed to update approval')
+    }
+  } catch (error) {
+    console.error('Error calling approval API:', error)
+  }
+}
+
 
   const fetchProfiles = async () => {
     try {
@@ -206,6 +231,13 @@ export default function AdminPage() {
             <h3 className="text-lg font-semibold text-gray-900">Filtered Results</h3>
             <p className="text-3xl font-bold text-gray-600">{filteredProfiles.length}</p>
           </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900">Pending Approval</h3>
+            <p className="text-3xl font-bold text-yellow-600">
+              {profiles.filter(p => !p.isApproved).length}
+            </p>
+          </div>
         </div>
 
         {/* Staff Table */}
@@ -268,13 +300,34 @@ export default function AdminPage() {
                       >
                         {profile.isPublic ? 'Hide' : 'Show'}
                       </button>
-                      <Link
+                    
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                      {!profile.isApproved ? (
+                        <button
+                          onClick={() => toggleApproval(profile.id, false)}
+                          className="text-primary-600 hover:text-primary-900 font-bold"
+                        >
+                          Approve Access
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => toggleApproval(profile.id, true)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Revoke
+                        </button>
+                      )}
+                      {/* Keep your existing Edit link below */}
+                        <Link
                         href={`/admin/edit/${profile.id}`}
                         className="text-primary-600 hover:text-primary-900"
                       >
                         Edit
                       </Link>
                     </td>
+
                   </tr>
                 ))}
               </tbody>

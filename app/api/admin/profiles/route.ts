@@ -11,12 +11,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const profiles = await prisma.profile.findMany({
-      include: { user: true },
-      orderBy: { lastName: 'asc' }
+  
+    const users = await prisma.user.findMany({
+      include: { 
+        profile: true 
+      },
+      orderBy: { 
+        createdAt: 'desc' 
+      }
     })
 
-    return NextResponse.json(profiles)
+    return NextResponse.json(users)
   } catch (error) {
     console.error('Admin profiles fetch error:', error)
     return NextResponse.json(

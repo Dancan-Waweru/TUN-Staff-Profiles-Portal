@@ -43,6 +43,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
+   isApproved    Boolean   @default(false)
   profile       Profile?
   sessions      Session[]
 }
