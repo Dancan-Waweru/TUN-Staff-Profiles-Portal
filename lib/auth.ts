@@ -43,17 +43,18 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async signIn({ user, account }) {
+       async signIn({ user, account }) {
       if (!user.email) return false
 
       try {
+        // 🌟 ADD THIS SPECIFIC LINE BACK BELOW 🌟
+        const isAdmin = user.email === process.env.ADMIN_EMAIL
 
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email }
         })
 
        if (!dbUser) {
-
           await prisma.user.create({
             data: {
               email: user.email,
@@ -65,7 +66,6 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (!isAdmin) {
-
             try {
               const data = await resend.emails.send({
                 from: 'Staff Portal <onboarding@resend.dev>',
@@ -81,26 +81,24 @@ export const authOptions: NextAuthOptions = {
                     </a>
                   </div>`
               })
-
             } catch (e) {
-
+              console.error("Email delivery failed:", e)
             }
             return '/auth/pending'
           }
         }
 
         if (dbUser && !dbUser.isApproved && !isAdmin) {
-
           return '/auth/pending'
         }
 
-
         return true 
       } catch (error) {
-
+        console.error("SignIn Exception:", error)
         return false
       }
     },
+
 
     
     async jwt({ token, user }) {
